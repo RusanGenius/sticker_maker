@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticker Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tg: {
+                            bg: '#17212b',
+                            panel: '#242f3d',
+                            border: '#2b3a4a',
+                            primary: '#3390ec',
+                            primaryHover: '#2a7bc9',
+                            textMuted: '#8b9bb4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-tg-bg text-white p-4 md:p-8 font-sans">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-tg-primary mb-2">Telegram Video Sticker Maker</h1>
+            <p class="text-tg-textMuted">Convert any video into a Telegram-compatible video sticker (.webm)</p>
+        </header>
+
+        <div id="unsupported-warning" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-400">
+            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+            <p class="text-sm">
+                Your browser does not support VP9 WebM encoding natively. Please use a recent version of Chrome, Edge, or Firefox for this tool to work.
+            </p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Upload Area -->
+            <div id="upload-area" class="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors border-tg-border bg-tg-panel hover:border-tg-primary/50">
+                <input type="file" id="file-input" accept="video/*" class="hidden" />
+                <i data-lucide="upload" class="w-12 h-12 text-tg-primary mx-auto mb-4"></i>
+                <p class="text-lg mb-2">Drag & drop a video here</p>
+                <p class="text-sm text-tg-textMuted">or click to select a file</p>
+            </div>
+
+            <!-- Editor Area -->
+            <div id="editor-area" class="hidden bg-tg-panel rounded-xl p-6 border border-tg-border space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Edit Video</h2>
+                    <button id="btn-reset" class="text-sm text-tg-textMuted hover:text-white transition-colors">
+                        Choose another video
+                    </button>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8 items-start">
+                    <!-- Left Column: Preview Area -->
+                    <div class="w-full md:w-1/2 flex flex-col items-center md:sticky md:top-8">
+                        <div id="preview-container" class="relative w-64 h-64 overflow-hidden flex items-center justify-center transition-all duration-300 rounded-lg border border-tg-border checkerboard">
+                            <video id="video-preview" style="width: 100%; height: 100%; object-fit: cover;" autoplay muted playsinline></video>
+                        </div>
+                        <p class="text-xs text-tg-textMuted mt-3 text-center">Preview</p>
+                    </div>
+
+                    <!-- Right Column: Controls Area -->
+                    <div class="w-full md:w-1/2 space-y-6">
+                        
+                        <!-- Scale Mode -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <label class="font-medium flex items-center gap-2">
+                                    <i data-lucide="maximize" class="w-4 h-4"></i> Scale Mode
+                                </label>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="btn-scale-fill" class="flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-primary text-white">Fill</button>
+                                <button id="btn-scale-fit" class="flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">Fit</button>
+                            </div>
+                        </div>
+
+                        <!-- Background -->
+                        <div class="space-y-3">
+                            <label class="font-medium text-sm flex items-center gap-2">
+                                <i data-lucide="palette" class="w-4 h-4"></i> Background
+                            </label>
+                            <div class="flex gap-2">
+                                <button id="btn-bg-transparent" class="flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-primary text-white">Transparent</button>
+                                <button id="btn-bg-black" class="flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">Black</button>
+                            </div>
+                        </div>
+
+                        <!-- Speed Control -->
+                        <div class="space-y-3">
+                            <label class="font-medium text-sm flex items-center gap-2">
+                                <i data-lucide="fast-forward" class="w-4 h-4"></i> Playback Speed
+                            </label>
+                            <div class="flex gap-2" id="speed-controls">
+                                <button data-speed="0.5" class="speed-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">0.5x</button>
+                                <button data-speed="1" class="speed-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-primary text-white">1x</button>
+                                <button data-speed="1.5" class="speed-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">1.5x</button>
+                                <button data-speed="2" class="speed-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">2x</button>
+                            </div>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <label class="font-medium flex items-center gap-2">
+                                    <i data-lucide="scissors" class="w-4 h-4"></i> Trim Source
+                                </label>
+                                <span id="trim-output-text" class="text-tg-primary">Output: 3.0s / 3.0s</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-xs text-tg-textMuted mb-1">
+                                        <span id="start-time-text">Start: 0.0s</span>
+                                    </div>
+                                    <input type="range" id="start-time" min="0" max="100" step="0.1" value="0" class="w-full h-2 bg-tg-bg rounded-lg appearance-none cursor-pointer accent-tg-primary" />
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs text-tg-textMuted mb-1">
+                                        <span id="end-time-text">End: 3.0s</span>
+                                    </div>
+                                    <input type="range" id="end-time" min="0" max="100" step="0.1" value="3" class="w-full h-2 bg-tg-bg rounded-lg appearance-none cursor-pointer accent-tg-primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mask Toggle -->
+                        <div class="space-y-3">
+                            <label class="font-medium text-sm">Sticker Shape</label>
+                            <div class="flex gap-3">
+                                <button id="btn-shape-square" class="flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors bg-tg-primary text-white">
+                                    <i data-lucide="square" class="w-4 h-4"></i> Square
+                                </button>
+                                <button id="btn-shape-round" class="flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors bg-tg-bg text-tg-textMuted hover:bg-tg-border">
+                                    <i data-lucide="circle" class="w-4 h-4"></i> Round
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button id="btn-generate" class="w-full py-3 px-4 bg-tg-primary hover:bg-tg-primaryHover disabled:bg-tg-border disabled:text-tg-textMuted text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                            <span id="generate-text">Generate Sticker</span>
+                            <i data-lucide="loader-2" id="generate-spinner" class="w-5 h-5 animate-spin hidden"></i>
+                        </button>
+                        
+                        <div id="progress-container" class="hidden w-full bg-tg-bg rounded-full h-2 overflow-hidden">
+                            <div id="progress-bar" class="bg-tg-primary h-2 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+
+                        <p id="error-msg" class="hidden text-sm text-red-400 text-center"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Area -->
+            <div id="output-area" class="hidden bg-tg-panel rounded-xl p-6 border border-tg-border flex flex-col items-center space-y-4 animate-in">
+                <h2 class="text-xl font-semibold text-tg-primary flex items-center gap-2">
+                    Sticker Ready!
+                </h2>
+                
+                <div class="w-64 h-64 rounded-lg flex items-center justify-center border border-tg-border overflow-hidden checkerboard">
+                    <video id="output-video" autoplay loop muted playsinline class="max-w-full max-h-full"></video>
+                </div>
+                
+                <a id="download-link" download="Rusan.webm" class="py-3 px-8 bg-tg-primary hover:bg-tg-primaryHover text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    Download .webm
+                </a>
+                <p class="text-xs text-tg-textMuted text-center max-w-sm">
+                    Send this file as a document to the @Stickers bot in Telegram to add it to a pack.
+                </p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+.checkerboard {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="10" height="10" fill="%232b3a4a"/><rect x="10" y="10" width="10" height="10" fill="%232b3a4a"/><rect x="10" width="10" height="10" fill="%2317212b"/><rect y="10" width="10" height="10" fill="%2317212b"/></svg>');
+    background-color: transparent;
+}
+
+.animate-in {
+    animation: fade-in 0.5s ease-out, slide-in-from-bottom-4 0.5s ease-out;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slide-in-from-bottom-4 {
+    from { transform: translateY(1rem); }
+    to { transform: translateY(0); }
+}
+
+/* Custom range input styling for webkit */
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #3390ec;
+    cursor: pointer;
+}
+
+input[type=range]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #3390ec;
+    cursor: pointer;
+    border: none;
+}
